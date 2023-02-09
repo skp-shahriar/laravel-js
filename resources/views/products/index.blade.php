@@ -2,45 +2,55 @@
 
 @section('content')
 
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Products</h1>
-    </div>
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Products</h1>
+</div>
 
 
-    <div class="card">
-        <form action="" method="get" class="card-header">
-            <div class="form-row justify-content-between">
-                <div class="col-md-2">
-                    <input type="text" name="title" placeholder="Product Title" class="form-control">
-                </div>
-                <div class="col-md-2">
-                    <select name="variant" id="" class="form-control">
+<div class="card">
+    <form action="" method="get" class="card-header">
+        <div class="form-row justify-content-between">
+            <div class="col-md-2">
+                <input type="text" name="product_title" id="product_title" value="{{ $filterData['product_title'] }}"
+                    placeholder="Product Title" class="form-control">
+            </div>
+            <div class="col-md-2">
+                <select name="variant" id="variant" class="form-control">
+                    <option value="" selected>Select varient</option>
+                    @foreach($variants as $variant)
+                    <optgroup label="{{ $variant['name'] }}">
+                        @foreach($variant['children'] as $item)
+                        <option value="{{ $item }}">{{ $item }}</option>
+                        @endforeach
+                        @endforeach
+                </select>
+            </div>
 
-                    </select>
-                </div>
-
-                <div class="col-md-3">
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text">Price Range</span>
-                        </div>
-                        <input type="text" name="price_from" aria-label="First name" placeholder="From" class="form-control">
-                        <input type="text" name="price_to" aria-label="Last name" placeholder="To" class="form-control">
+            <div class="col-md-3">
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Price Range</span>
                     </div>
-                </div>
-                <div class="col-md-2">
-                    <input type="date" name="date" placeholder="Date" class="form-control">
-                </div>
-                <div class="col-md-1">
-                    <button type="submit" class="btn btn-primary float-right"><i class="fa fa-search"></i></button>
+                    <input type="text" name="price_from" value="{{ $filterData['price_from'] }}" aria-label="First name"
+                        placeholder="From" class="form-control">
+                    <input type="text" name="price_to" value="{{ $filterData['price_to'] }}" aria-label="Last name"
+                        placeholder="To" class="form-control">
                 </div>
             </div>
-        </form>
+            <div class="col-md-2">
+                <input type="date" name="date" value="{{ $filterData['date'] }}" placeholder="Date"
+                    class="form-control">
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-primary float-right"><i class="fa fa-search"></i></button>
+            </div>
+        </div>
+    </form>
 
-        <div class="card-body">
-            <div class="table-response">
-                <table class="table">
-                    <thead>
+    <div class="card-body">
+        <div class="table-response">
+            <table class="table">
+                <thead>
                     <tr>
                         <th>#</th>
                         <th>Title</th>
@@ -48,53 +58,79 @@
                         <th>Variant</th>
                         <th width="150px">Action</th>
                     </tr>
-                    </thead>
+                </thead>
 
-                    <tbody>
-
+                <tbody>
+                    @if(!empty($products) && $products->count())
+                    @php $count = 0; @endphp
+                    @foreach($products as $product)
                     <tr>
-                        <td>1</td>
-                        <td>T-Shirt <br> Created at : 25-Aug-2020</td>
-                        <td>Quality product in low cost</td>
+                        <td>{{ ++$count }}</td>
                         <td>
-                            <dl class="row mb-0" style="height: 80px; overflow: hidden" id="variant">
-
+                            {{ $product->title }}
+                            <br>
+                            Created at : {{date('d-M-Y', strtotime($product->created_at)) }}
+                        </td>
+                        <td>
+                            {{ $product->description }}
+                        </td>
+                        <td>
+                            @foreach($product->product_variant_prices as $item)
+                            <dl class="row mb-0" style="height: 35px; overflow: hidden" id="variant">
                                 <dt class="col-sm-3 pb-0">
-                                    SM/ Red/ V-Nick
+                                    {{ \App\Models\ProductVariant::getVariantTitle($item->product_variant_one) }}/
+                                    {{ \App\Models\ProductVariant::getVariantTitle($item->product_variant_two) }}/
+                                    {{ \App\Models\ProductVariant::getVariantTitle($item->product_variant_three) }}
                                 </dt>
                                 <dd class="col-sm-9">
                                     <dl class="row mb-0">
-                                        <dt class="col-sm-4 pb-0">Price : {{ number_format(200,2) }}</dt>
-                                        <dd class="col-sm-8 pb-0">InStock : {{ number_format(50,2) }}</dd>
+                                        <dt class="col-sm-4 pb-0">Price : {{ number_format($item->price,2) }}</dt>
+                                        <dd class="col-sm-8 pb-0">InStock : {{ number_format($item->stock,2) }}</dd>
                                     </dl>
                                 </dd>
                             </dl>
-                            <button onclick="$('#variant').toggleClass('h-auto')" class="btn btn-sm btn-link">Show more</button>
+                            @endforeach
                         </td>
                         <td>
                             <div class="btn-group btn-group-sm">
-                                <a href="{{ route('product.edit', 1) }}" class="btn btn-success">Edit</a>
+                                <a href="{{ route('product.edit', $product->id) }}" class="btn btn-success">Edit</a>
                             </div>
                         </td>
                     </tr>
+                    @endforeach
+                    @else
+                    @php $count = 0; @endphp
+                    <tr>
+                        <td class="text-center" colspan="5">There are no data.</td>
+                    </tr>
+                    @endif
+                </tbody>
 
-                    </tbody>
-
-                </table>
-            </div>
-
+            </table>
         </div>
 
-        <div class="card-footer">
-            <div class="row justify-content-between">
-                <div class="col-md-6">
-                    <p>Showing 1 to 10 out of 100</p>
-                </div>
-                <div class="col-md-2">
-
-                </div>
-            </div>
-        </div>
     </div>
 
+    <div class="card-footer">
+        <div class="row justify-content-between">
+            <div class="col-md-10">
+                <p>
+                    Showing {{ $count ? 1 : 0 }} to {{ $count ?? 0 }}
+                    out of {{count($products)}}
+                </p>
+
+            </div>
+            @if(!$filterData['filtering'])
+            <div class="col-md-2">
+                {!! $products->links() !!}
+            </div>
+            @endif
+        </div>
+    </div>
+</div>
+<script>
+    if ('{{  $filterData['variant'] }}' != ''){
+        document.getElementById("variant").value = '{{  $filterData['variant'] }}';
+    }
+</script>
 @endsection
